@@ -11,8 +11,9 @@ if __name__ == '__main__':
     parser.add_argument('--sudoku-path', type=str, help='The path to the sudoku you would like solved', default='/home/troyxdp/Documents/University Work/Optimization/Project/test_data/1.txt')
     parser.add_argument('--mutation-rate', type=float, help='The mutation rate to use for the evolutionary algorithm - 0.02 is recommended', default=0.03)
     parser.add_argument('--nt', type=int, help='Size of subset to be used for tournament in tournament selection', default=12)
-    parser.add_argument('--wait', type=int, help='Number of generations to wait for an improvement before terminating', default=300)
+    parser.add_argument('--wait', type=int, help='Number of generations to wait for an improvement before terminating', default=50)
     parser.add_argument('--num-offspring', type=int, help='Number of offspring to generate per generation', default=4500)
+    parser.add_argument('--output-folder', type=str, help='Path to output CSV stat files to', default='/home/troyxdp/Documents/University Work/Optimization/Project/statistics')
     args = parser.parse_args()
 
     # Get sudoku
@@ -27,7 +28,7 @@ if __name__ == '__main__':
 
     # Create evolutionary agent
     ea_agent = EvolutionaryAgent(np.array(grid))
-    solution = ea_agent.run_evolutionary_algorithm(mutation_rate=args.mutation_rate, no_improvement_max_generations=args.wait, n_t=args.nt, num_offspring=args.num_offspring)
+    solution = ea_agent.run_evolutionary_algorithm(mutation_rate=args.mutation_rate, no_improvement_max_generations=args.wait, n_t=args.nt, num_offspring=args.num_offspring, output_folder=args.output_folder)
     if solution:
         print("Found solution!\n")
         print(solution)

@@ -8,6 +8,8 @@ import matplotlib
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 from tqdm.auto import tqdm
+import pandas as pd
+import yaml
 
 from classes.grid import Grid
 
@@ -61,6 +63,16 @@ class EvolutionaryAgent():
             n_t:int=12, 
             output_folder:str='/home/troyxdp/Documents/University Work/Optimization/Project/statistics'
         ):
+        # Write hyperparameters to YAML
+        hyperparams = {
+            'mutation_rate': mutation_rate,
+            'tournament_size': n_t,
+            'wait': no_improvement_max_generations,
+            'num_offspring': num_offspring
+        }
+        with open(os.path.join(output_folder, 'hyperparams.yaml'), 'w') as f:
+            yaml.dump(hyperparams, f)
+
         # Initialize values
         max_fitness = 0
         last_improvement_generation = 0
@@ -186,6 +198,12 @@ class EvolutionaryAgent():
         plt.show()
 
         # Write overall fitness stats to CSV
+        totals_dict = {
+            'generations': x,
+            'total_fitness': total_fitnesses_per_epoch
+        }
+        df = pd.DataFrame(totals_dict)
+        df.to_csv(os.path.join(output_folder, 'total_fitness_per_generation.csv'))
 
         # Display graph for overall fitness per epoch
         plt.plot(x, best_fitness_per_epoch)
@@ -194,6 +212,14 @@ class EvolutionaryAgent():
         plt.title("Best Fitness Score For Each Generation")
         plt.show()
 
+        # Write overall fitness stats to CSV
+        best_fitness_dict = {
+            'generations': x,
+            'total_fitness': best_fitness_per_epoch
+        }
+        df = pd.DataFrame(best_fitness_dict)
+        df.to_csv(os.path.join(output_folder, 'best_fitness_per_generation.csv'))
+
         # Display graph for overall fitness per epoch
         plt.plot(x, max_fitness_over_epochs)
         plt.xlabel("Epochs")
@@ -201,7 +227,15 @@ class EvolutionaryAgent():
         plt.title("Best Fitness Score Encountered Up To Each Epoch")
         plt.show()
 
-        # Return solution (if one was found)
+        # Write overall fitness stats to CSV
+        max_fitness_dict = {
+            'generations': x,
+            'total_fitness': max_fitness_over_epochs
+        }
+        df = pd.DataFrame(max_fitness_dict)
+        df.to_csv(os.path.join(output_folder, 'max_fitness_over_generations.csv'))
+
+        # Return solution (if one was found), else return None
         if max_fitness == self.max_possible_fitness:
             for member in self.population:
                 if member.get_fitness() == max_fitness:
