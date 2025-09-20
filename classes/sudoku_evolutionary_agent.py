@@ -2,6 +2,7 @@ import os
 import random
 from copy import deepcopy
 import math
+from abc import ABC, abstractmethod
 
 import numpy as np
 import matplotlib
@@ -11,75 +12,91 @@ from tqdm.auto import tqdm
 import pandas as pd
 import yaml
 
-from classes.grid import Grid
+from classes.sudoku import StandardSudoku, KillerSudoku, Cage
 
-class EvolutionaryAgent():
+class SudokuEvolutionaryAgent(ABC):
+    # CONSTRUCTOR
+    def __init__(self):
+        self._solution = None
 
+    # GETTER METHODS
+    def get_solution(self):
+        return self._solution
+
+    # FUNCTIONAL METHODS
+    @abstractmethod
+    def run_evolutionary_algorithm(
+        self, 
+        mutation_rate:float=0.02, 
+        no_improvement_max_generations:int=300, 
+        num_offspring:int=4500, 
+        n_t:int=12, 
+        output_folder:str='/home/troyxdp/Documents/University Work/Optimization/Project/statistics'
+    ):
+        pass
+
+    def _tournament_selection(self, fitnesses: list[tuple[int,float]], n_t: int) -> tuple[int, int]:
+        # Select tournament candidates and sort them according to fitness
+        tournament_candidates = random.sample(fitnesses, n_t)
+        tournament_candidates = sorted(tournament_candidates, key=lambda index: index[1], reverse=True)
+
+        # Return the indices in the fitnesses
+        return tournament_candidates[0][0], tournament_candidates[1][0]
+    
+    # Made with help from Mantere and Koljonen (2006) - https://www.researchgate.net/profile/Kim-Viljanen/publication/228840763_New_Developments_in_Artificial_Intelligence_and_the_Semantic_Web/links/09e4150a2d2cbb80ff000000/New-Developments-in-Artificial-Intelligence-and-the-Semantic-Web.pdf#page=91
+    def _crossover(self, sudoku_1: StandardSudoku, sudoku_2: StandardSudoku, crossover_mask: list[list[bool]]) -> tuple[StandardSudoku, StandardSudoku]:
+        # For crossover between 2 members of the population, swap blocks in the same block row and block column
+        child_1 = deepcopy(sudoku_1)
+        child_2 = deepcopy(sudoku_2)
+        for block_row in range(len(crossover_mask)):
+            for block_col in range(len(crossover_mask[block_row])):
+                if crossover_mask[block_row][block_col]:
+                    grid_vals_1 = child_1.get_block_values(block_row, block_col)[0].copy()
+                    grid_vals_2 = child_2.get_block_values(block_row, block_col)[0].copy()
+                    child_1.set_block_values(block_row, block_col, grid_vals_2)
+                    child_2.set_block_values(block_row, block_col, grid_vals_1)
+        return child_1, child_2
+
+
+
+class StandardSudokuEvolutionaryAgent(SudokuEvolutionaryAgent):
+    # CONSTRUCTOR
     def __init__(self, grid: np.ndarray):
         # Get max fitness
         self.max_possible_fitness = len(grid) * len(grid) * 2 # for 9x9, max fitness is 162
 
         # Instantiate grids
-        self.population : list[Grid] = []
+        self.population : list[StandardSudoku] = []
         for i in range(len(grid) * len(grid) * 100):
-            self.population.append(Grid(grid.copy()))
+            self.population.append(StandardSudoku(grid.copy()))
 
-        # Initialize grids
-        # Initialize each block
-        for i in range(int(np.sqrt(len(grid)))):
-            for j in range(int(np.sqrt(len(grid)))):
-                # Get values that can be changed in the block
-                grid_vals, immutabilities = self.population[0].get_block_values(i, j)
-                unavailable_values = []
-                for val, immutable in zip(grid_vals, immutabilities):
-                    if immutable:
-                        unavailable_values.append(val)
-                available_values = [i for i in range(1, len(grid) + 1) if i not in unavailable_values]
-
-                # Initialize the block for each member of the population
-                for sudoku in self.population:
-                    # Shuffle the random values
-                    random.shuffle(available_values)
-
-                    # Set the block to contain these values
-                    values_flat = np.zeros(len(grid))
-                    available_values_counter = 0
-                    for k in range(len(values_flat)):
-                        if immutabilities[k] == 0:
-                            values_flat[k] = available_values[available_values_counter]
-                            available_values_counter += 1
-                        else:
-                            values_flat[k] = grid_vals[k]
-
-                    # Set block inside grid to have these values
-                    sudoku.set_block_values(i, j, np.array(values_flat))
-
-    # Made with assistance from Dukkipati et al. (2004) - https://arxiv.org/pdf/cs/0408055
+    # FUNCTIONAL METHODS
     def run_evolutionary_algorithm(
             self, 
             mutation_rate:float=0.02, 
             no_improvement_max_generations:int=300, 
             num_offspring:int=4500, 
             n_t:int=12, 
-            output_folder:str='/home/troyxdp/Documents/University Work/Optimization/Project/statistics'
+            output_folder:str=''
         ):
-        # Write hyperparameters to YAML
-        hyperparams = {
-            'mutation_rate': mutation_rate,
-            'tournament_size': n_t,
-            'wait': no_improvement_max_generations,
-            'num_offspring': num_offspring
-        }
-        with open(os.path.join(output_folder, 'hyperparams.yaml'), 'w') as f:
-            yaml.dump(hyperparams, f)
+        if output_folder.strip():
+            # Write hyperparameters to YAML
+            hyperparams = {
+                'mutation_rate': mutation_rate,
+                'tournament_size': n_t,
+                'wait': no_improvement_max_generations,
+                'num_offspring': num_offspring
+            }
+            with open(os.path.join(output_folder, 'hyperparams.yaml'), 'w') as f:
+                yaml.dump(hyperparams, f)
 
         # Initialize values
         max_fitness = 0
         last_improvement_generation = 0
         curr_generation_num = 0
-        total_fitnesses_per_epoch = []
-        max_fitness_over_epochs = []
-        best_fitness_per_epoch = []
+        total_fitnesses_per_generation = []
+        max_fitness_over_generations = []
+        best_fitness_per_generation = []
 
         # Start evolutionary process
         print("Starting evolution...\n")
@@ -101,9 +118,9 @@ class EvolutionaryAgent():
                     max_fitness = fitness
             
             # Append to statistics array
-            total_fitnesses_per_epoch.append(total_fitness_this_epoch)
-            best_fitness_per_epoch.append(best_fitness)
-            max_fitness_over_epochs.append(max_fitness)
+            total_fitnesses_per_generation.append(total_fitness_this_epoch)
+            best_fitness_per_generation.append(best_fitness)
+            max_fitness_over_generations.append(max_fitness)
 
             # Reproduce
             children = []
@@ -126,7 +143,7 @@ class EvolutionaryAgent():
 
             # Select for next generation - using a Steady State Genetic Algorithm
             next_generation = []
-            candidates: list[Grid] = children
+            candidates: list[StandardSudoku] = children
             candidates.extend(self.population.copy())
 
             # Get fitnesses for candidates
@@ -187,86 +204,96 @@ class EvolutionaryAgent():
             print(f"Best fitness: {best_fitness}")
             print(f"Max fitness: {max_fitness}\n")
 
-        # Get x values for x axis for graphs
-        x = list(range(len(best_fitness_per_epoch)))
+        # Get x values for x axis for graphs and stats
+        x = list(range(len(best_fitness_per_generation)))
 
-        # Display graph for overall fitness per epoch
-        plt.plot(x, total_fitnesses_per_epoch)
+        # Display graph for total fitness per generation
+        plt.plot(x, total_fitnesses_per_generation)
         plt.xlabel("Epochs")
         plt.ylabel("Total Fitness")
         plt.title("Overall Population Fitness Per Epoch")
         plt.show()
 
-        # Write overall fitness stats to CSV
-        totals_dict = {
-            'generations': x,
-            'total_fitness': total_fitnesses_per_epoch
-        }
-        df = pd.DataFrame(totals_dict)
-        df.to_csv(os.path.join(output_folder, 'total_fitness_per_generation.csv'))
-
-        # Display graph for overall fitness per epoch
-        plt.plot(x, best_fitness_per_epoch)
+        # Display graph for best fitness per generation
+        plt.plot(x, best_fitness_per_generation)
         plt.xlabel("Epochs")
         plt.ylabel("Fitness Score")
         plt.title("Best Fitness Score For Each Generation")
         plt.show()
 
-        # Write overall fitness stats to CSV
-        best_fitness_dict = {
-            'generations': x,
-            'total_fitness': best_fitness_per_epoch
-        }
-        df = pd.DataFrame(best_fitness_dict)
-        df.to_csv(os.path.join(output_folder, 'best_fitness_per_generation.csv'))
-
-        # Display graph for overall fitness per epoch
-        plt.plot(x, max_fitness_over_epochs)
+        # Display graph for max fitness encountered up to and including each generation
+        plt.plot(x, max_fitness_over_generations)
         plt.xlabel("Epochs")
         plt.ylabel("Fitness Score")
         plt.title("Best Fitness Score Encountered Up To Each Epoch")
         plt.show()
 
-        # Write overall fitness stats to CSV
-        max_fitness_dict = {
-            'generations': x,
-            'total_fitness': max_fitness_over_epochs
-        }
-        df = pd.DataFrame(max_fitness_dict)
-        df.to_csv(os.path.join(output_folder, 'max_fitness_over_generations.csv'))
+        # Write stats to CSV
+        if output_folder.strip():
+            # Write total fitnesses to CSV
+            totals_dict = {
+                'generations': x,
+                'total_fitness': total_fitnesses_per_generation
+            }
+            df = pd.DataFrame(totals_dict)
+            df.to_csv(os.path.join(output_folder, 'total_fitness_per_generation.csv'))
+
+            # Write best fitness per generation to CSV
+            best_fitness_dict = {
+                'generations': x,
+                'total_fitness': best_fitness_per_generation
+            }
+            df = pd.DataFrame(best_fitness_dict)
+            df.to_csv(os.path.join(output_folder, 'best_fitness_per_generation.csv'))
+
+            # Write max fitness over generations to CSV
+            max_fitness_dict = {
+                'generations': x,
+                'total_fitness': max_fitness_over_generations
+            }
+            df = pd.DataFrame(max_fitness_dict)
+            df.to_csv(os.path.join(output_folder, 'max_fitness_over_generations.csv'))
+
+
 
         # Return solution (if one was found), else return None
         if max_fitness == self.max_possible_fitness:
             for member in self.population:
                 if member.get_fitness() == max_fitness:
-                    return member
-        return None
+                    self._solution = member
+                    return
+    
 
-    def _tournament_selection(self, fitnesses: list[tuple[int,float]], n_t: int) -> tuple[int, int]:
-        # Select tournament candidates and sort them according to fitness
-        tournament_candidates = random.sample(fitnesses, n_t)
-        tournament_candidates = sorted(tournament_candidates, key=lambda index: index[1], reverse=True)
 
-        # Return the indices in the fitnesses
-        return tournament_candidates[0][0], tournament_candidates[1][0]
+class KillerSudokuEvolutionaryAgent(SudokuEvolutionaryAgent):
+    # CONSTRUCTOR
+    def __init__(
+            self, 
+            grid: np.ndarray,
+            cages: list[Cage]
+        ):
+        # Get max fitness
+        self.max_possible_fitness = len(grid) * len(grid) * 2 + len(cages)
 
-                
-    # Made with help from Mantere and Koljonen (2006) - https://www.researchgate.net/profile/Kim-Viljanen/publication/228840763_New_Developments_in_Artificial_Intelligence_and_the_Semantic_Web/links/09e4150a2d2cbb80ff000000/New-Developments-in-Artificial-Intelligence-and-the-Semantic-Web.pdf#page=91
-    def _crossover(self, grid_1: Grid, grid_2: Grid, crossover_mask: list[list[bool]]) -> tuple[Grid, Grid]:
-        # For crossover between 2 members of the population, swap blocks in the same block row and block column
-        child_1 = deepcopy(grid_1)
-        child_2 = deepcopy(grid_2)
-        for block_row in range(len(crossover_mask)):
-            for block_col in range(len(crossover_mask[block_row])):
-                if crossover_mask[block_row][block_col]:
-                    grid_vals_1 = child_1.get_block_values(block_row, block_col)[0].copy()
-                    grid_vals_2 = child_2.get_block_values(block_row, block_col)[0].copy()
-                    child_1.set_block_values(block_row, block_col, grid_vals_2)
-                    child_2.set_block_values(block_row, block_col, grid_vals_1)
-        return child_1, child_2
+        # Instantiate grids
+        self.population : list[KillerSudoku] = []
+        for i in range(len(grid) * len(grid) * 100):
+            self.population.append(KillerSudoku(np.zeros_like(grid), cages, len(grid)))
 
-    def _get_g_k(self, g0: float, k: int, alpha: float):
-        sigma = 0
-        for i in range(1, k + 2):
-            sigma += 1 / math.pow(i, alpha)
-        return g0 * sigma
+    def run_evolutionary_algorithm(
+            self, 
+            mutation_rate:float=0.02, 
+            no_improvement_max_generations:int=300, 
+            num_offspring:int=4500, 
+            n_t:int=12, 
+            output_folder:str='/home/troyxdp/Documents/University Work/Optimization/Project/statistics'
+        ):
+        # Write hyperparameters to YAML
+        hyperparams = {
+            'mutation_rate': mutation_rate,
+            'tournament_size': n_t,
+            'wait': no_improvement_max_generations,
+            'num_offspring': num_offspring
+        }
+        with open(os.path.join(output_folder, 'hyperparams.yaml'), 'w') as f:
+            yaml.dump(hyperparams, f)
