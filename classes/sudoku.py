@@ -215,6 +215,9 @@ class Cage():
             if cell == cell_tuple:
                 return True
         return False
+    
+    def __len__(self):
+        return len(self._cells)
 
 
 
@@ -226,10 +229,6 @@ class KillerSudoku(Sudoku):
         cages:list[Cage],
         grid_size:int=9
     ):
-        # Check if cages are valid
-        if not self.is_valid_cages(cages):
-            raise ValueError("Error: invalid cages provided")
-        
         # Initialize super class values
         super().__init__(grid) # this essentially just instantiates the grid
 
@@ -308,15 +307,40 @@ class KillerSudoku(Sudoku):
         self.set_block_values(block_row, block_col, np.array(block_vals))
 
     # FUNCTIONAL METHODS
-    def is_valid_cages(self, cages: list[Cage], grid_size:int=9):
+    def is_valid_cages(self):
+        # Get grid size
+        grid_size = len(self)
+
+        # Check if each and every single cell in the sudoku is contained within a cage
         for row in range(grid_size):
             for col in range(grid_size):
                 cell_tuple = (row, col)
                 contained_in_cages = False
-                for cage in cages:
+                for cage in self._cages:
                     if cell_tuple in cage:
                         contained_in_cages = True
                         break
                 if not contained_in_cages:
+                    print(f"Cell {(row, col)} is not contained within a cage")
                     return False
+                
+        # Check that the number of cells in the cages is equal to the number of cells in the grid
+        num_cells = grid_size * grid_size
+        for cage in self._cages:
+            num_cells -= len(cage)
+        if num_cells != 0:
+            print(f"Incorrect number of cells. There are {num_cells} cells in cages")
+            return False
+        
+        # Check that the sum of the cages adds up to the sum of all the numbers in the grid
+        correct_sum = 0
+        for i in range(1, grid_size + 1):
+            correct_sum += i * grid_size
+        cage_sum = 0
+        for cage in self._cages:
+            cage_sum += cage.get_correct_sum()
+        if correct_sum != cage_sum:
+            print(f"Sum of cages is incorrect. Needs to be {correct_sum}, but it is {cage_sum}")
+            return False
+
         return True
