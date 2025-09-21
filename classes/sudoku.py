@@ -344,3 +344,37 @@ class KillerSudoku(Sudoku):
             return False
 
         return True
+    
+
+
+class SudokuX(StandardSudoku):
+    # CONSTRUCTOR
+    def __init__(
+        self, 
+        grid: np.ndarray   
+    ):
+        super().__init__(grid)
+
+    def get_fitness(self):
+        # Get fitness for row column as in standard sudoku
+        row_col_fitness = super().get_fitness()
+
+        # Get fitness for TL-BR diagonal
+        present_numbers = np.zeros(len(self._grid))
+        num_valid_digits_diag_1 = 0
+        for i in range(len(self._grid)):
+            if self._grid[i][i] != 0:
+                if present_numbers[self._grid[i][i] - 1] == 0:
+                    present_numbers[self._grid[i][i] - 1] = 1
+                    num_valid_digits_diag_1 += 1
+
+        # Get fitness for TR-BL diagonal
+        present_numbers = np.zeros(len(self._grid))
+        num_valid_digits_diag_2 = 0
+        for i in range(len(self._grid)):
+            if self._grid[i][len(self._grid)-i-1] != 0:
+                if present_numbers[self._grid[i][len(self._grid)-i-1] - 1] == 0:
+                    present_numbers[self._grid[i][len(self._grid)-i-1] - 1] = 1
+                    num_valid_digits_diag_2 += 1
+
+        return row_col_fitness + num_valid_digits_diag_1 + num_valid_digits_diag_2

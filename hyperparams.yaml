@@ -1,4 +1,0 @@
-mutation_rate: 0.03
-num_offspring: 4500
-tournament_size: 8
-wait: 50
