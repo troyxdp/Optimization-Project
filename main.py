@@ -8,13 +8,13 @@ from classes.sudoku import Cage
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Sudoku solver that uses evolutionary algorithms')
-    parser.add_argument('--sudoku-path', type=str, help='The path to the sudoku you would like solved', default='/home/troyxdp/Documents/University Work/Optimization/Project/test_data/1.txt')
+    parser.add_argument('--sudoku-path', type=str, help='The path to the sudoku you would like solved', default='/home/troyxdp/Documents/University Work/Optimization/Project/test_data/Standard Sudoku/1.txt')
     parser.add_argument('--mutation-rate', type=float, help='The mutation rate to use for the evolutionary algorithm - 0.03 is recommended', default=0.03)
     parser.add_argument('--nt', type=int, help='Size of subset to be used for tournament in tournament selection', default=12)
     parser.add_argument('--no-improvement-max-generations', type=int, help='Number of generations to wait for an improvement before terminating', default=25)
     parser.add_argument('--num-mutation-retries', type=int, help='Number of times to inject randomness upon premature convergence', default=1)
-    parser.add_argument('--mutation-retry-scale', type=float, help='Value to scale mutation rate by when injecting randomness', default=2)
-    parser.add_argument('--num-offspring', type=int, help='Number of offspring to generate per generation', default=4500)
+    parser.add_argument('--mutation-retry-scale', type=float, help='Value to scale mutation rate by when injecting randomness', default=5)
+    parser.add_argument('--num-offspring', type=int, help='Number of offspring to generate per generation', default=4050)
     parser.add_argument('--output-folder', type=str, help='Path to output CSV stat files to', default='')
     parser.add_argument('--killer', action='store_true', help='Flag for whether to do a killer sudoku or normal sudoku')
     parser.add_argument('--sudoku-x', action='store_true', help='Flag for whether to do normal sudoku or sudoku X')
