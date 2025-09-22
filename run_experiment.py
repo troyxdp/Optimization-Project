@@ -1,9 +1,10 @@
 import os
+import subprocess
 
 # Variables being tested
 MUTATION_RATES = [0.02, 0.03, 0.06]
 TOURNAMENT_SIZES = [8, 12, 16]
-POPULATION_SIZES = [8100, 16200] # set the number of offspring to be half these values
+POPULATION_SIZES = [8100] # set the number of offspring to be half these values
 NUM_EXPERIMENTS_PER_CONFIGURATION = 3
 
 if __name__ == '__main__':
@@ -22,12 +23,25 @@ if __name__ == '__main__':
                 for pop_size in POPULATION_SIZES:
                     for _ in range(NUM_EXPERIMENTS_PER_CONFIGURATION):
                         # Get output path and create the directory for it if need be
-                        output_path = os.path.join(standard_out_dir, subfolder, 'experiment_{experiment_counter}')
+                        output_path = os.path.join(standard_out_dir, subfolder, f'experiment_{experiment_counter}')
                         if not os.path.isdir(output_path):
                             os.makedirs(output_path)
+                        # else:
+                        #     print(f"Already performed experiment for output folder {output_path}")
+                        #     experiment_counter += 1
+                        #     continue
 
                         # Perform experiment
-                        exec(f"python3 main.py --sudoku-path '{puzzle_path}' --output-folder '{output_path}' --nt {n_t} --mutation-rate {mutation_rate} --population-size {pop_size} --num-offspring {pop_size // 2}")
+                        subprocess.run([
+                            "python3",
+                            "main.py",
+                            "--sudoku-path", puzzle_path,
+                            "--output-folder", output_path,
+                            "--nt", str(n_t),
+                            "--mutation-rate", str(mutation_rate),
+                            "--population-size", str(pop_size),
+                            "--num-offspring", str(pop_size // 2)
+                        ])
 
                         # Update experiment_counter
                         experiment_counter += 1
@@ -47,13 +61,26 @@ if __name__ == '__main__':
                 for pop_size in POPULATION_SIZES:
                     for _ in range(NUM_EXPERIMENTS_PER_CONFIGURATION):
                         # Get output path and create the directory for it if need be
-                        output_path = os.path.join(x_out_dir, subfolder, 'experiment_{experiment_counter}')
+                        output_path = os.path.join(x_out_dir, subfolder, f'experiment_{experiment_counter}')
                         if not os.path.isdir(output_path):
                             os.makedirs(output_path)
+                        # else:
+                        #     print(f"Already performed experiment for output folder {output_path}")
+                        #     experiment_counter += 1
+                        #     continue
 
                         # Perform experiment
-                        exec(f"python3 main.py --sudoku-x --sudoku-path '{puzzle_path}' --output-folder '{output_path}' --nt {n_t} --mutation-rate {mutation_rate} --population-size {pop_size} --num-offspring {pop_size // 2}")
-
+                        subprocess.run([
+                            "python3",
+                            "main.py",
+                            "--sudoku-x",
+                            "--sudoku-path", puzzle_path,
+                            "--output-folder", output_path,
+                            "--nt", n_t,
+                            "--mutation-rate", mutation_rate,
+                            "--population-size", pop_size,
+                            "--num-offspring", pop_size // 2
+                        ])
                         # Update experiment_counter
                         experiment_counter += 1
 
@@ -72,12 +99,26 @@ if __name__ == '__main__':
                 for pop_size in POPULATION_SIZES:
                     for _ in range(NUM_EXPERIMENTS_PER_CONFIGURATION):
                         # Get output path and create the directory for it if need be
-                        output_path = os.path.join(x_out_dir, subfolder, 'experiment_{experiment_counter}')
+                        output_path = os.path.join(x_out_dir, subfolder, f'experiment_{experiment_counter}')
                         if not os.path.isdir(output_path):
                             os.makedirs(output_path)
+                        # else:
+                        #     print(f"Already performed experiment for output folder {output_path}")
+                        #     experiment_counter += 1
+                        #     continue
 
                         # Perform experiment
-                        exec(f"python3 main.py --killer --sudoku-path '{puzzle_path}' --output-folder '{output_path}' --nt {n_t} --mutation-rate {mutation_rate} --population-size {pop_size} --num-offspring {pop_size // 2}")
+                        subprocess.run([
+                            "python3",
+                            "main.py",
+                            "--killer",
+                            "--sudoku-path", puzzle_path,
+                            "--output-folder", output_path,
+                            "--nt", n_t,
+                            "--mutation-rate", mutation_rate,
+                            "--population-size", pop_size,
+                            "--num-offspring", pop_size // 2
+                        ])
 
                         # Update experiment_counter
                         experiment_counter += 1
