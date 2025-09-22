@@ -182,32 +182,32 @@ class SudokuEvolutionaryAgent(ABC):
             print(f"Best fitness: {best_fitness}/{self.max_possible_fitness}")
             print(f"Max fitness: {max_fitness}/{self.max_possible_fitness}\n")
 
-        # Get x values for x axis for graphs and stats
-        x = list(range(len(best_fitness_per_generation)))
-
-        # Display graph for total fitness per generation
-        plt.plot(x, total_fitnesses_per_generation)
-        plt.xlabel("Epochs")
-        plt.ylabel("Total Fitness")
-        plt.title("Overall Population Fitness Per Epoch")
-        plt.show()
-
-        # Display graph for best fitness per generation
-        plt.plot(x, best_fitness_per_generation)
-        plt.xlabel("Epochs")
-        plt.ylabel("Fitness Score")
-        plt.title("Best Fitness Score For Each Generation")
-        plt.show()
-
-        # Display graph for max fitness encountered up to and including each generation
-        plt.plot(x, max_fitness_over_generations)
-        plt.xlabel("Epochs")
-        plt.ylabel("Fitness Score")
-        plt.title("Best Fitness Score Encountered Up To Each Epoch")
-        plt.show()
-
         # Write stats to CSV
         if output_folder.strip():
+            # Get x values for x axis for graphs and stats
+            x = list(range(len(best_fitness_per_generation)))
+
+            # Display graph for total fitness per generation
+            plt.plot(x, total_fitnesses_per_generation)
+            plt.xlabel("Epochs")
+            plt.ylabel("Total Fitness")
+            plt.title("Overall Population Fitness Per Epoch")
+            plt.savefig(os.path.join(output_folder, 'total_fitness_per_generation.png'))
+
+            # Display graph for best fitness per generation
+            plt.plot(x, best_fitness_per_generation)
+            plt.xlabel("Epochs")
+            plt.ylabel("Fitness Score")
+            plt.title("Best Fitness Score For Each Generation")
+            plt.savefig(os.path.join(output_folder, 'best_fitness_per_generation.png'))
+
+            # Display graph for max fitness encountered up to and including each generation
+            plt.plot(x, max_fitness_over_generations)
+            plt.xlabel("Epochs")
+            plt.ylabel("Fitness Score")
+            plt.title("Best Fitness Score Encountered Up To Each Epoch")
+            plt.savefig(os.path.join(output_folder, 'max_fitness_over_generations.png'))
+            
             # Write total fitnesses to CSV
             totals_dict = {
                 'generations': x,
