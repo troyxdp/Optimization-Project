@@ -76,10 +76,10 @@ if __name__ == '__main__':
                             "--sudoku-x",
                             "--sudoku-path", puzzle_path,
                             "--output-folder", output_path,
-                            "--nt", n_t,
-                            "--mutation-rate", mutation_rate,
-                            "--population-size", pop_size,
-                            "--num-offspring", pop_size // 2
+                            "--nt", str(n_t),
+                            "--mutation-rate", str(mutation_rate),
+                            "--population-size", str(pop_size),
+                            "--num-offspring", str(pop_size // 2)
                         ])
                         # Update experiment_counter
                         experiment_counter += 1
@@ -87,10 +87,10 @@ if __name__ == '__main__':
     # Tests on Killer Sudoku
     killer_in_dir = '/home/troyxdp/Documents/University Work/Optimization/Project/test_data/Killer Sudoku'
     killer_out_dir = '/home/troyxdp/Documents/University Work/Optimization/Project/statistics/Killer Sudoku'
-    for input_puzzle in sorted(os.listdir(x_in_dir)):
+    for input_puzzle in sorted(os.listdir(killer_in_dir)):
         # Get puzzle path and subfolder to send results to
         subfolder = os.path.splitext(input_puzzle)[0]
-        puzzle_path = os.path.join(x_in_dir, input_puzzle)
+        puzzle_path = os.path.join(killer_in_dir, input_puzzle)
 
         # Perform experiments for each of the different hyperparameters
         experiment_counter = 1
@@ -99,7 +99,7 @@ if __name__ == '__main__':
                 for pop_size in POPULATION_SIZES:
                     for _ in range(NUM_EXPERIMENTS_PER_CONFIGURATION):
                         # Get output path and create the directory for it if need be
-                        output_path = os.path.join(x_out_dir, subfolder, f'experiment_{experiment_counter}')
+                        output_path = os.path.join(killer_out_dir, subfolder, f'experiment_{experiment_counter}')
                         if not os.path.isdir(output_path):
                             os.makedirs(output_path)
                         # else:
@@ -114,10 +114,10 @@ if __name__ == '__main__':
                             "--killer",
                             "--sudoku-path", puzzle_path,
                             "--output-folder", output_path,
-                            "--nt", n_t,
-                            "--mutation-rate", mutation_rate,
-                            "--population-size", pop_size,
-                            "--num-offspring", pop_size // 2
+                            "--nt", str(n_t),
+                            "--mutation-rate", str(mutation_rate),
+                            "--population-size", str(pop_size),
+                            "--num-offspring", str(pop_size // 2)
                         ])
 
                         # Update experiment_counter

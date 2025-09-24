@@ -108,3 +108,5 @@ if __name__ == '__main__':
             print(solution)
         else:
             print("No solution found!")
+
+    print()

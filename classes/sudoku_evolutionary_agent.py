@@ -48,7 +48,8 @@ class SudokuEvolutionaryAgent(ABC):
                 'tournament_size': n_t,
                 'wait': no_improvement_max_generations,
                 'max_mutation_retries': max_mutation_retries,
-                'mutation_retry_scale': mutation_retry_scale
+                'mutation_retry_scale': mutation_retry_scale,
+                'population_size': self._population_size,
             }
             with open(os.path.join(output_folder, 'hyperparams.yaml'), 'w') as f:
                 yaml.dump(hyperparams, f)
@@ -193,6 +194,7 @@ class SudokuEvolutionaryAgent(ABC):
             plt.ylabel("Total Fitness")
             plt.title("Overall Population Fitness Per Epoch")
             plt.savefig(os.path.join(output_folder, 'total_fitness_per_generation.png'))
+            plt.clf()
 
             # Display graph for best fitness per generation
             plt.plot(x, best_fitness_per_generation)
@@ -200,6 +202,7 @@ class SudokuEvolutionaryAgent(ABC):
             plt.ylabel("Fitness Score")
             plt.title("Best Fitness Score For Each Generation")
             plt.savefig(os.path.join(output_folder, 'best_fitness_per_generation.png'))
+            plt.clf()
 
             # Display graph for max fitness encountered up to and including each generation
             plt.plot(x, max_fitness_over_generations)
@@ -207,6 +210,7 @@ class SudokuEvolutionaryAgent(ABC):
             plt.ylabel("Fitness Score")
             plt.title("Best Fitness Score Encountered Up To Each Epoch")
             plt.savefig(os.path.join(output_folder, 'max_fitness_over_generations.png'))
+            plt.clf()
             
             # Write total fitnesses to CSV
             totals_dict = {
